@@ -51,10 +51,12 @@ class LFG(commands.Cog):
 
 		# ユーザーデータを取得する
 		ud = Data.userdata[ctx.guild.id][ctx.author.id]
-		if ud["LFG"]["Status"] == True:
-			embed = discord.Embed(color=discord.Colour.from_rgb(205, 61, 66))
-			embed.add_field(name=f":no_entry_sign: 既に募集が開始されています！", value=f"再度募集を行うには、一度募集をキャンセルしてください！")
-			embed.set_author(name=Bot.Name, icon_url=Bot.Client.user.display_avatar.url)
+		if ud.LFG.Status == True:
+			embed = discord.Embed(
+				title=":warning: 既に募集が開始されています！",
+				description="再度募集を行うには、一度募集をキャンセルしてください！",
+				color=discord.Colour.from_rgb(247, 206, 80)
+			)
 			await ctx.respond(embed=embed, ephemeral=True)
 		else:
 			# ギルドデータを取得する
@@ -88,9 +90,10 @@ class LFG(commands.Cog):
 
 			# 募集開始通知用埋め込みメッセージを作成
 			notification_embed = discord.Embed(
-				color=discord.Colour.from_rgb(112, 171, 235),
-				title="メンバーの募集を開始しました。",
-				description=f"[募集メッセージを表示]({rmsg.jump_url})")
+				title=":arrow_forward: メンバーの募集を開始しました。",
+				description=f"[募集メッセージを表示]({rmsg.jump_url})",
+				color=discord.Colour.from_rgb(79, 134, 194)
+			)
 			notification_embed.add_field(name=f"🎮 ゲーム", value=f"{game}")
 			notification_embed.add_field(name="**@**", value=f"**`{nom}`**")
 			notification_embed.set_footer(text=f"ID: {id}")
@@ -105,15 +108,15 @@ class LFG(commands.Cog):
 		ud = Data.userdata[ctx.guild.id][ctx.author.id]
 		if ud.LFG.Status == False:
 			embed = discord.Embed(
-				color=discord.Colour.from_rgb(191, 71, 65),
-				title="メンバーの募集が実行されていません。",
-				description=f"メンバーの募集を行っていないため、終了することはできません。"
+				title=":warning: メンバーの募集が実行されていません。",
+				description=f"メンバーの募集を行っていないため、終了することはできません。",
+				color=discord.Colour.from_rgb(247, 206, 80)
 			)
 		else:
 			embed = discord.Embed(
-				color=discord.Colour.from_rgb(191, 71, 65),
-				title="メンバーの募集を終了しました。",
-				description=f"[募集メッセージを表示](" + Bot.Client.get_message(ud.LFG.Message_ID).jump_url + ")"
+				title=":red_square: メンバーの募集を終了しました。",
+				description=f"[募集メッセージを表示](" + Bot.Client.get_message(ud.LFG.Message_ID).jump_url + ")",
+				color=discord.Colour.from_rgb(205, 61, 66)
 			)
 			embed.add_field(name=f"🎮 ゲーム", value=f"{ud.LFG.Game}")
 			embed.add_field(name="**@**", value=f"**`{ud.LFG.Max_Number_Of_Member}`**")

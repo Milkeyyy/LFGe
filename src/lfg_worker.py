@@ -90,7 +90,7 @@ async def end_lfg(endtype, guild, author):
 	# メッセージIDからメッセージを取得
 	msg = Bot.Client.get_message(message_id)
 	if msg == None:
-		logging.warning(f"募集メッセージが見つかりません - ID: {message_id}")
+		logging.warning(f"募集メッセージを取得できません - ID: {message_id}")
 		# ユーザーデータのLFG項目をリセットする
 		ud.LFG = Box(Data.default_userdata_item["LFG"])
 		# ユーザーデータの募集状態を無効に変える
@@ -106,7 +106,7 @@ async def end_lfg(endtype, guild, author):
 		msgembed.description = ":no_entry_sign: この募集は締め切られました。"
 	elif endtype == 2: # キャンセル
 		msgembed.color = discord.Colour.from_rgb(228, 146, 16)
-		msgembed.description = ":orange_square: この募集はキャンセルされました。"
+		msgembed.description = ":yellow_square: この募集はキャンセルされました。"
 
 	await msg.edit(embed=msgembed, view=None)
 
