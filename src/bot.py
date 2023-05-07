@@ -1,5 +1,6 @@
 import discord
 
+
 # Botの名前
 Name = "LFGe"
 # Botのバージョン

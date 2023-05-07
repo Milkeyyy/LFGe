@@ -1,7 +1,8 @@
 import bot as Bot
 
+
 # ユーザーID一覧をユーザー一覧に変換
-def convertToUserFromID(id_list):
+def convert_to_user_from_id(id_list):
 	user_list = []
 	for id in id_list:
 		user_list.append(Bot.Client.get_user(id))
@@ -9,7 +10,7 @@ def convertToUserFromID(id_list):
 
 
 # リストを箇条書き化
-def convertToBulletPointsFromList(list: list):
+def convert_to_bullet_points_from_list(list: list):
 	bp = ""
 	for index, item in enumerate(list):
 		if index == list.count:
@@ -20,5 +21,5 @@ def convertToBulletPointsFromList(list: list):
 
 
 # ユーザーIDリスト → ユーザーオブジェクトリスト → ユーザー名箇条書き化
-def convertToUserBulletPointsFromIDList(id_list):
-	return convertToBulletPointsFromList(convertToUserFromID(id_list))
+def convert_to_user_bullet_points_from_id_list(id_list):
+	return convert_to_bullet_points_from_list(convert_to_user_from_id(id_list))

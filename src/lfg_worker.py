@@ -9,6 +9,7 @@ from box import Box
 import bot as Bot
 import data as Data
 
+
 # 1分毎に募集状況を更新する
 lfg_loop_isrunning = False
 
@@ -45,7 +46,7 @@ async def updatelfgstatus():
 					continue
 				# 募集を終了
 				logging.info("-- メンバー募集終了 (時間切れ) - ID: " + str(ud.LFG.ID))
-				await EndLFG(1, msg.guild.id, user_id)
+				await end_lfg(1, msg.guild.id, user_id)
 			#else:
 				#invd["timeleft"] == invd["timeleft"] - 1
 	logging.info("LFGの更新終了")
@@ -61,7 +62,7 @@ async def after_updatelfgstatus():
 	logging.info("LFGの定期更新終了")
 
 
-async def StartLFG(guild, author, msgid, game, nom, timeout):
+async def start_lfg(guild, author, msgid, game, nom, timeout):
 	ud = Data.userdata[guild][author]
 	ud.LFG.update(
 		Status = True,
@@ -81,7 +82,7 @@ async def StartLFG(guild, author, msgid, game, nom, timeout):
 	# 募集者本人をメンバーに加える
 	ud.LFG.Member.append(author)
 
-async def EndLFG(endtype, guild, author):
+async def end_lfg(endtype, guild, author):
 	ud = Data.userdata[guild][author]
 
 	message_id = ud.LFG.Message_ID

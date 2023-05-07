@@ -6,6 +6,7 @@ from box import Box
 
 import bot as Bot
 
+
 game_title_list = ["Rainbow Six Siege", "Apex Legends", "Splatoon 3"]
 default_gamelist_item = {"Role_ID": 0}
 
@@ -29,7 +30,7 @@ userdata = Box()
 deta = Deta()
 
 # ギルドデータの読み込み
-def loadGuildData():
+def load_guild_data():
 	# グローバル変数宣言
 	global guilddata
 
@@ -37,8 +38,8 @@ def loadGuildData():
 
 
 # ギルドデータの確認
-def checkGuildData():
-	loadGuildData()
+def check_guild_data():
+	load_guild_data()
 
 	gd = {}
 	info("ギルドデータの確認 開始")
@@ -62,7 +63,7 @@ def checkGuildData():
 				guilddata.update({f"Game_List.{game}": default_gamelist_item})
 
 
-def createGameList():
+def create_game_list():
 	global game_title_list
 	global default_gamelist_item
 	global gamelist
@@ -80,7 +81,7 @@ def createGameList():
 	}
 
 # ユーザーデータを作成
-def createUserData():
+def create_user_data():
 	global userdata
 
 	ud = dict()
@@ -99,4 +100,4 @@ async def on_guild_join(guild):
 	guilddata.put(default_guilddata_item, str(guild.id))
 
 # ゲーム一覧を作成
-createGameList()
+create_game_list()
