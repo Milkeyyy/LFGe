@@ -8,7 +8,7 @@ import bot as Bot
 
 
 game_title_list = ["Rainbow Six Siege", "Apex Legends", "Splatoon 3"]
-default_gamelist_item = {"Role_ID": 0}
+default_gamelist_item = {"Role_ID": "0"}
 
 default_userdata_item = {
 	"LFG": {
@@ -76,7 +76,7 @@ def create_game_list():
 		gamelist[game] = default_gamelist_item
 
 	default_guilddata_item = {
-		"LFG_Channel": 0,
+		"LFG_Channel": "0",
 		"Game_List": gamelist
 	}
 
