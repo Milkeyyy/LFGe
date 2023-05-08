@@ -128,6 +128,31 @@ class LFG(commands.Cog):
 		# 募集終了通知を送信する
 		await ctx.respond(embed=embed, ephemeral=True)
 
+	@lfg.command(description="現在行っているメンバーの募集をキャンセルします。")
+	async def cancel(self, ctx: discord.ApplicationContext):
+		ud = Data.userdata[ctx.guild.id][ctx.author.id]
+		if ud.LFG.Status == False:
+			embed = discord.Embed(
+				title=":warning: メンバーの募集が実行されていません。",
+				description=f"メンバーの募集を行っていないため、終了することはできません。",
+				color=discord.Colour.from_rgb(247, 206, 80)
+			)
+		else:
+			embed = discord.Embed(
+				title=":yellow_square: メンバーの募集をキャンセルしました。",
+				description=f"[募集メッセージを表示](" + Bot.Client.get_message(ud.LFG.Message_ID).jump_url + ")",
+				color=discord.Colour.from_rgb(228, 146, 16)
+			)
+			embed.add_field(name=f"🎮 ゲーム", value=f"{ud.LFG.Game}")
+			embed.add_field(name="**@**", value=f"**`{ud.LFG.Max_Number_Of_Member}`**")
+			embed.set_footer(text=f"ID: {ud.LFG.ID}")
+
+		# 募集終了処理を実行する
+		await LFGWorker.end_lfg(2, ctx.guild.id, ctx.author.id)
+
+		# 募集終了通知を送信する
+		await ctx.respond(embed=embed, ephemeral=True)
+
 class InviteView(discord.ui.View):
 	@discord.ui.button(label="参加", emoji="✅", style=discord.ButtonStyle.green)
 	async def button_callback(self, button, interaction):
@@ -143,7 +168,7 @@ class InviteView(discord.ui.View):
 		if type(rmsg) != discord.Message:
 			return
 
-		async def updateMemberList():
+		async def update_member_list():
 			try:
 				original_embed = rmsg.embeds[0]
 			except:
@@ -155,7 +180,7 @@ class InviteView(discord.ui.View):
 					field.value = Util.convert_to_user_bullet_points_from_id_list(ud.LFG.Member)
 			await rmsg.edit(rmsg.content, embed=original_embed, view=InviteView())
 
-		async def sendJoinMessage():
+		async def send_join_message():
 			# 埋め込みメッセージを作成して返信
 			embed = discord.Embed(color=discord.Colour.from_rgb(131, 177, 88))
 			embed.set_author(name=f"{interaction.user} さんが参加しました", icon_url=interaction.user.display_avatar.url)
@@ -194,16 +219,16 @@ class InviteView(discord.ui.View):
 				if len(ud.LFG.Member) >= ud.LFG.Max_Number_Of_Member:
 					# 募集データにユーザーIDを追加
 					ud.LFG.Member.append(interaction.user.id)
-					await updateMemberList()
-					await sendJoinMessage()
+					await update_member_list()
+					await send_join_message()
 					# 募集を締め切る
 					await LFGWorker.end_lfg(1, rmsg.guild.id, lfgid)
 					return
 				else:
 					# 募集データにユーザーIDを追加
 					ud.LFG.Member.append(interaction.user.id)
-					await updateMemberList()
-					await sendJoinMessage()
+					await update_member_list()
+					await send_join_message()
 
 def setup(bot):
     bot.add_cog(LFG(bot))
