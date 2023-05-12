@@ -12,7 +12,7 @@ import lfg_worker as LFGWorker
 
 
 logging.basicConfig(level=logging.INFO)
-#logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.ERROR)
 
 
 # スプラッシュテキストを表示

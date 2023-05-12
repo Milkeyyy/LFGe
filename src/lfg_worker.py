@@ -104,9 +104,11 @@ async def end_lfg(endtype, guild, author):
 	if endtype == 1: # 締め切り
 		msgembed.color = discord.Colour.from_rgb(205, 61, 66)
 		msgembed.description = ":no_entry_sign: この募集は締め切られました。"
+		msgembed.fields.pop(1) # 締め切り時刻のフィールドを消す
 	elif endtype == 2: # キャンセル
 		msgembed.color = discord.Colour.from_rgb(228, 146, 16)
 		msgembed.description = ":yellow_square: この募集はキャンセルされました。"
+		msgembed.fields.pop(1) # 締め切り時刻のフィールドを消す
 
 	await msg.edit(embed=msgembed, view=None)
 

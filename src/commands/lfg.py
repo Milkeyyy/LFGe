@@ -166,21 +166,26 @@ class LFG(commands.Cog):
 					else:
 						role = role.mention
 
-				# 募集IDを生成
+				# 募集IDを生成 (ユーザーID)
 				id = ctx.author.id
+
+				# 締め切り時間
+				timestamp = int((datetime.datetime.now() + datetime.timedelta(minutes=timeout)).timestamp())
 
 				# 募集用埋め込みメッセージを作成
 				embed = discord.Embed(color=discord.Colour.from_rgb(131, 177, 88), title=":loudspeaker: メンバー募集")
-				embed.add_field(name=f"🎮 ゲーム", value=f"{game}")
-				embed.add_field(name="**@**", value=f"**`{nom}`**")
+				embed.add_field(name=f"🎮 ゲーム", value=f"**{game}**")
+				embed.add_field(name=f"🕒 締め切り", value=f"**<t:{timestamp}:f>\n(<t:{timestamp}:R>)**")
+				embed.add_field(name="\u200B", value="\u200B")
 				embed.add_field(name=f":busts_in_silhouette: 参加者 (1/{nom + 1})", value=f"・{ctx.author.mention}")
+				embed.add_field(name="*️⃣  人数", value=f"**{nom}**人")
 				embed.set_footer(text=f"ID: {id}")
 				embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.display_avatar.url)
 
 				# 募集メッセージを送信 (募集用テキストチャンネルが指定されていない場合は、コマンドが実行されたチャンネルへ送信する)
 				rch = Bot.Client.get_channel(int(gd["LFG_Channel"]))
 				if rch == None: rch = Bot.Client.get_channel(ctx.channel_id)
-				rmsg = await rch.send(content=f"{role}", embed=embed, view=InviteView())
+				rmsg = await rch.send(content=f"{role}", embed=embed, view=InviteView(timeout=None))
 
 				# 募集開始通知用埋め込みメッセージを作成
 				notification_embed = discord.Embed(
@@ -188,8 +193,10 @@ class LFG(commands.Cog):
 					description=f"[募集メッセージを表示]({rmsg.jump_url})",
 					color=discord.Colour.from_rgb(79, 134, 194)
 				)
-				notification_embed.add_field(name=f"🎮 ゲーム", value=f"{game}")
-				notification_embed.add_field(name="**@**", value=f"**`{nom}`**")
+				notification_embed.add_field(name=f"🎮 ゲーム", value=f"**{game}**")
+				notification_embed.add_field(name=f"🕒 締め切り", value=f"**<t:{timestamp}:f>\n(<t:{timestamp}:R>)**")
+				embed.add_field(name="\u200B", value="\u200B")
+				notification_embed.add_field(name="*️⃣  人数", value=f"**{nom}**人")
 				notification_embed.set_footer(text=f"ID: {id}")
 
 				# 募集を開始する
@@ -222,8 +229,8 @@ class LFG(commands.Cog):
 					description=f"[募集メッセージを表示](" + Bot.Client.get_message(ud.LFG.Message_ID).jump_url + ")",
 					color=discord.Colour.from_rgb(205, 61, 66)
 				)
-				embed.add_field(name=f"🎮 ゲーム", value=f"{ud.LFG.Game}")
-				embed.add_field(name="**@**", value=f"**`{ud.LFG.Max_Number_Of_Member}`**")
+				embed.add_field(name=f"🎮 ゲーム", value=f"**{ud.LFG.Game}**")
+				embed.add_field(name="*️⃣  人数", value=f"**`{ud.LFG.Max_Number_Of_Member}`**人")
 				embed.set_footer(text=f"ID: {ud.LFG.ID}")
 
 			# 募集終了処理を実行する
@@ -256,8 +263,8 @@ class LFG(commands.Cog):
 					description=f"[募集メッセージを表示](" + Bot.Client.get_message(ud.LFG.Message_ID).jump_url + ")",
 					color=discord.Colour.from_rgb(228, 146, 16)
 				)
-				embed.add_field(name=f"🎮 ゲーム", value=f"{ud.LFG.Game}")
-				embed.add_field(name="**@**", value=f"**`{ud.LFG.Max_Number_Of_Member}`**")
+				embed.add_field(name=f"🎮 ゲーム", value=f"**{ud.LFG.Game}**")
+				embed.add_field(name="*️⃣ 人数", value=f"**`{ud.LFG.Max_Number_Of_Member}`**人")
 				embed.set_footer(text=f"ID: {ud.LFG.ID}")
 
 			# 募集終了処理を実行する
@@ -309,7 +316,7 @@ class InviteView(discord.ui.View):
 					if field.name.startswith(":busts_in_silhouette: 参加者") is True:
 						field.name = f":busts_in_silhouette: 参加者 ({len(ud.LFG.Member)}/{ud.LFG.Max_Number_Of_Member + 1})"
 						field.value = Util.convert_to_user_bullet_points_from_id_list(ud.LFG.Member)
-				await rmsg.edit(rmsg.content, embed=original_embed, view=InviteView())
+				await rmsg.edit(rmsg.content, embed=original_embed, view=InviteView(timeout=None))
 			except Exception as e:
 				error("- エラー")
 				error(traceback.format_exc())
