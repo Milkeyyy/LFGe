@@ -293,7 +293,7 @@ class ToiregaKitanaiOmisetteIyadayoneView(discord.ui.View):
 		# ユーザーデータを取得する
 		ud = Data.userdata[interaction.guild.id][interaction.user.id]
 		# 埋め込みメッセージを作成
-		embed = await LFG.cancel_embed(ud)
+		embed = await LFG.end_embed(ud)
 		# 募集終了通知を送信する
 		await interaction.response.send_message(embed=embed, ephemeral=True)
 		# 募集終了処理を実行する
