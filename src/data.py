@@ -27,7 +27,7 @@ guilddata = {}
 userdata = Box()
 
 # データベース
-deta = Deta(environ["DETA_PROJECT_KEY"])
+deta: Deta
 
 # ギルドデータの読み込み
 def load_guild_data():

@@ -45,9 +45,15 @@ async def on_ready():
 
 # Botへログイン
 try:
+	# .envを読み込む
 	env_path = path.join(getcwd(), ".env")
 	info("環境変数を読み込み: " + env_path)
-	load_dotenv(env_path) # .envを読み込む
+	load_dotenv(env_path)
+
+	# データベースを取得
+	info("データベースを取得")
+	Data.deta = Data.Deta(environ["DETA_PROJECT_KEY"])
+
 	Bot.Client.load_extension("commands.about")
 	Bot.Client.load_extension("commands.lfg")
 	Bot.Client.run(environ["BOT_TOKEN"])
