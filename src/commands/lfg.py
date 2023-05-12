@@ -110,6 +110,44 @@ class LFG(commands.Cog):
 	# コマンドグループを定義する
 	lfg = SlashCommandGroup("lfg", "LFG Commands")
 
+	# 埋め込み
+
+	async def cancel_embed(ud) -> discord.Embed:
+		if ud.LFG.Status == False:
+			embed = discord.Embed(
+				title=":warning: メンバーの募集が実行されていません。",
+				description=f"メンバーの募集を行っていないため、キャンセルすることはできません。",
+				color=discord.Colour.from_rgb(247, 206, 80)
+			)
+		else:
+			embed = discord.Embed(
+					title=":yellow_square: メンバーの募集をキャンセルしました。",
+					description=f"[募集メッセージを表示](" + Bot.Client.get_message(ud.LFG.Message_ID).jump_url + ")",
+					color=discord.Colour.from_rgb(228, 146, 16)
+				)
+			embed.add_field(name=f"🎮 ゲーム", value=f"**{ud.LFG.Game}**")
+			embed.add_field(name="*️⃣ 人数", value=f"**`{ud.LFG.Max_Number_Of_Member}`**人")
+			embed.set_footer(text=f"ID: {ud.LFG.ID}")
+		return embed
+
+	async def end_embed(ud) -> discord.Embed:
+		if ud.LFG.Status == False:
+			embed = discord.Embed(
+				title=":warning: メンバーの募集が実行されていません。",
+				description=f"メンバーの募集を行っていないため、終了することはできません。",
+				color=discord.Colour.from_rgb(247, 206, 80)
+			)
+		else:
+			embed = discord.Embed(
+				title=":red_square: メンバーの募集を終了しました。",
+				description=f"[募集メッセージを表示](" + Bot.Client.get_message(ud.LFG.Message_ID).jump_url + ")",
+				color=discord.Colour.from_rgb(205, 61, 66)
+			)
+			embed.add_field(name=f"🎮 ゲーム", value=f"**{ud.LFG.Game}**")
+			embed.add_field(name="*️⃣  人数", value=f"**`{ud.LFG.Max_Number_Of_Member}`**人")
+			embed.set_footer(text=f"ID: {ud.LFG.ID}")
+		return embed
+
 	# コマンドたち
 	@lfg.command(description="新しくメンバーの募集を開始します。")
 	async def start(
@@ -185,7 +223,7 @@ class LFG(commands.Cog):
 				# 募集メッセージを送信 (募集用テキストチャンネルが指定されていない場合は、コマンドが実行されたチャンネルへ送信する)
 				rch = Bot.Client.get_channel(int(gd["LFG_Channel"]))
 				if rch == None: rch = Bot.Client.get_channel(ctx.channel_id)
-				rmsg = await rch.send(content=f"{role}", embed=embed, view=InviteView(timeout=None))
+				rmsg = await rch.send(content=f"{role}", embed=embed, view=LFGView(timeout=None))
 
 				# 募集開始通知用埋め込みメッセージを作成
 				notification_embed = discord.Embed(
@@ -203,7 +241,7 @@ class LFG(commands.Cog):
 				await LFGWorker.start_lfg(ctx.guild.id, ctx.author.id, rmsg.id, game, nom, timeout)
 
 				# 募集開始通知を募集者へ送信する (返信)
-				await ctx.respond(embed=notification_embed, ephemeral=True)
+				await ctx.respond(embed=notification_embed, view=ToiregaKitanaiOmisetteIyadayoneView(timeout=None), ephemeral=True)
 		except Exception as e:
 			error("- エラー")
 			error(traceback.format_exc())
@@ -213,29 +251,13 @@ class LFG(commands.Cog):
 
 	@lfg.command(description="現在行っているメンバーの募集を終了します。")
 	async def end(self, ctx: discord.ApplicationContext):
-		#await ctx.response.defer()
-
 		try:
+			# ユーザーデータを取得する
 			ud = Data.userdata[ctx.guild.id][ctx.author.id]
-			if ud.LFG.Status == False:
-				embed = discord.Embed(
-					title=":warning: メンバーの募集が実行されていません。",
-					description=f"メンバーの募集を行っていないため、終了することはできません。",
-					color=discord.Colour.from_rgb(247, 206, 80)
-				)
-			else:
-				embed = discord.Embed(
-					title=":red_square: メンバーの募集を終了しました。",
-					description=f"[募集メッセージを表示](" + Bot.Client.get_message(ud.LFG.Message_ID).jump_url + ")",
-					color=discord.Colour.from_rgb(205, 61, 66)
-				)
-				embed.add_field(name=f"🎮 ゲーム", value=f"**{ud.LFG.Game}**")
-				embed.add_field(name="*️⃣  人数", value=f"**`{ud.LFG.Max_Number_Of_Member}`**人")
-				embed.set_footer(text=f"ID: {ud.LFG.ID}")
-
+			# 埋め込みメッセージを作成
+			embed = await self.end_embed(ud)
 			# 募集終了処理を実行する
-			await LFGWorker.end_lfg(1, ctx.guild.id, ctx.author.id)
-
+			await LFGWorker.end_lfg(2, ctx.guild.id, ctx.author.id)
 			# 募集終了通知を送信する
 			await ctx.respond(embed=embed, ephemeral=True)
 		except Exception as e:
@@ -247,29 +269,13 @@ class LFG(commands.Cog):
 
 	@lfg.command(description="現在行っているメンバーの募集をキャンセルします。")
 	async def cancel(self, ctx: discord.ApplicationContext):
-		#await ctx.response.defer()
-
 		try:
+			# ユーザーデータを取得する
 			ud = Data.userdata[ctx.guild.id][ctx.author.id]
-			if ud.LFG.Status == False:
-				embed = discord.Embed(
-					title=":warning: メンバーの募集が実行されていません。",
-					description=f"メンバーの募集を行っていないため、終了することはできません。",
-					color=discord.Colour.from_rgb(247, 206, 80)
-				)
-			else:
-				embed = discord.Embed(
-					title=":yellow_square: メンバーの募集をキャンセルしました。",
-					description=f"[募集メッセージを表示](" + Bot.Client.get_message(ud.LFG.Message_ID).jump_url + ")",
-					color=discord.Colour.from_rgb(228, 146, 16)
-				)
-				embed.add_field(name=f"🎮 ゲーム", value=f"**{ud.LFG.Game}**")
-				embed.add_field(name="*️⃣ 人数", value=f"**`{ud.LFG.Max_Number_Of_Member}`**人")
-				embed.set_footer(text=f"ID: {ud.LFG.ID}")
-
+			# 埋め込みメッセージを作成
+			embed = await self.cancel_embed(ud)
 			# 募集終了処理を実行する
 			await LFGWorker.end_lfg(2, ctx.guild.id, ctx.author.id)
-
 			# 募集終了通知を送信する
 			await ctx.respond(embed=embed, ephemeral=True)
 		except Exception as e:
@@ -279,7 +285,34 @@ class LFG(commands.Cog):
 			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
 			await ctx.response.send_message(embed=embed, ephemeral=True)
 
-class InviteView(discord.ui.View):
+class ToiregaKitanaiOmisetteIyadayoneView(discord.ui.View):
+	@discord.ui.button(label="募集を終了", style=discord.ButtonStyle.red)
+	async def end_lfg(self, button, interaction: discord.Interaction):
+		# ボタンを削除する
+		await self.message.edit(view=None)
+		# ユーザーデータを取得する
+		ud = Data.userdata[interaction.guild.id][interaction.user.id]
+		# 埋め込みメッセージを作成
+		embed = await LFG.cancel_embed(ud)
+		# 募集終了通知を送信する
+		await interaction.response.send_message(embed=embed, ephemeral=True)
+		# 募集終了処理を実行する
+		await LFGWorker.end_lfg(1, interaction.guild.id, interaction.user.id)
+
+	@discord.ui.button(label="募集をキャンセル", style=discord.ButtonStyle.blurple)
+	async def cancel_lfg(self, button, interaction: discord.Interaction):
+		# ボタンを削除する
+		await self.message.edit(view=None)
+		# ユーザーデータを取得する
+		ud = Data.userdata[interaction.guild.id][interaction.user.id]
+		# 埋め込みメッセージを作成
+		embed = await LFG.cancel_embed(ud)
+		# 募集終了通知を送信する
+		await interaction.response.send_message(embed=embed, ephemeral=True)
+		# 募集終了処理を実行する
+		await LFGWorker.end_lfg(2, interaction.guild.id, interaction.user.id)
+
+class LFGView(discord.ui.View):
 	@discord.ui.button(label="参加", emoji="✅", style=discord.ButtonStyle.green)
 	async def button_callback(self, button, interaction):
 		# 募集IDを取得
@@ -316,7 +349,7 @@ class InviteView(discord.ui.View):
 					if field.name.startswith(":busts_in_silhouette: 参加者") is True:
 						field.name = f":busts_in_silhouette: 参加者 ({len(ud.LFG.Member)}/{ud.LFG.Max_Number_Of_Member + 1})"
 						field.value = Util.convert_to_user_bullet_points_from_id_list(ud.LFG.Member)
-				await rmsg.edit(rmsg.content, embed=original_embed, view=InviteView(timeout=None))
+				await rmsg.edit(rmsg.content, embed=original_embed, view=LFGView(timeout=None))
 			except Exception as e:
 				error("- エラー")
 				error(traceback.format_exc())
