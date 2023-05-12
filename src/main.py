@@ -1,7 +1,7 @@
 import logging
 import traceback
 from logging import info
-from os import environ, path
+from os import environ, getcwd, path
 
 import discord
 from discord.ext import commands
@@ -45,7 +45,9 @@ async def on_ready():
 
 # Botへログイン
 try:
-	load_dotenv(path.join(path.dirname(__file__), "../.env")) # .envを読み込む
+	env_path = path.join(getcwd(), ".env")
+	info("環境変数を読み込み: " + env_path)
+	load_dotenv(env_path) # .envを読み込む
 	Bot.Client.load_extension("commands.about")
 	Bot.Client.load_extension("commands.lfg")
 	Bot.Client.run(environ["BOT_TOKEN"])
