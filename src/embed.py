@@ -1,6 +1,5 @@
 import discord
 
-
 success = discord.Embed(
 	title=":white_check_mark: ",
 	colour=discord.Colour.from_rgb(140, 176, 91)

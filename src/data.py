@@ -1,11 +1,11 @@
 import datetime
 from logging import info
+from os import environ
 
-from deta import Deta
 from box import Box
+from deta import Deta
 
 import bot as Bot
-
 
 game_title_list = ["Rainbow Six Siege", "Apex Legends", "Splatoon 3"]
 default_gamelist_item = {"Role_ID": "0"}
@@ -27,7 +27,7 @@ guilddata = {}
 userdata = Box()
 
 # データベース
-deta = Deta()
+deta = Deta(environ["DETA_PROJECT_KEY"])
 
 # ギルドデータの読み込み
 def load_guild_data():

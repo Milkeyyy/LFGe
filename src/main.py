@@ -1,15 +1,15 @@
 import logging
-import os
 import traceback
 from logging import info
+from os import environ
 
 import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 
 import bot as Bot
 import data as Data
 import lfg_worker as LFGWorker
-
 
 logging.basicConfig(level=logging.INFO)
 logging.basicConfig(level=logging.ERROR)
@@ -45,8 +45,9 @@ async def on_ready():
 
 # Botへログイン
 try:
+	load_dotenv() # .envを読み込む
 	Bot.Client.load_extension("commands.about")
 	Bot.Client.load_extension("commands.lfg")
-	Bot.Client.run(os.getenv("BOT_TOKEN"))
+	Bot.Client.run(environ["BOT_TOKEN"])
 except Exception as e:
 	logging.error(traceback.format_exc())

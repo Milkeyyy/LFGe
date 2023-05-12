@@ -3,12 +3,11 @@ import logging
 import traceback
 
 import discord
-from discord.ext import tasks
 from box import Box
+from discord.ext import tasks
 
 import bot as Bot
 import data as Data
-
 
 # 1分毎に募集状況を更新する
 lfg_loop_isrunning = False

@@ -13,7 +13,6 @@ import embed as EmbedTemplate
 import lfg_worker as LFGWorker
 import util as Util
 
-
 class Config(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
