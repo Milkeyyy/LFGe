@@ -5,23 +5,24 @@ from logging import error, info, warning
 import discord
 from discord.commands import Option, SlashCommandGroup
 from discord.ext import commands
+from discord.interactions import Interaction
+from discord.ui.item import Item
 
 import bot as Bot
-import config as Config
+import config as ConfigCommands
 import data as Data
 import embed as EmbedTemplate
 import lfg_worker as LFGWorker
 import util as Util
 
-class Config(commands.Cog):
-	def __init__(self, bot):
-		self.bot = bot
-
+class ConfigCommands(commands.Cog):
 	# コマンドグループを定義する
 	config = SlashCommandGroup("config", "Config Commands")
 
 	# コマンドたち
 	@config.command(description="メンバー募集メッセージを送信するテキストチャンネルを設定します。")
+	@discord.guild_only()
+	@discord.default_permissions(administrator=True)
 	async def lfgchannel(
 		self,
 		ctx: discord.ApplicationContext,
@@ -51,13 +52,15 @@ class Config(commands.Cog):
 		except Exception as e:
 			error("- データベース更新エラー")
 			error(traceback.format_exc())
-			embed = EmbedTemplate.error
+			embed = EmbedTemplate.error()
 			embed.title = embed.title + "エラーが発生しました"
 			embed.description = "データベースの更新時にエラーが発生しました。もう一度お試しください。\n(解決しない場合、この問題を開発者へ報告してください。)"
 			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
 			await ctx.response.send_message(embed=embed)
 
 	@config.command(description="各ゲームのメンバー募集時にメンションするロールを設定します。")
+	@discord.guild_only()
+	@discord.default_permissions(administrator=True)
 	async def role(
 		self,
 		ctx: discord.ApplicationContext,
@@ -98,19 +101,15 @@ class Config(commands.Cog):
 		except Exception as e:
 			error("- エラー")
 			error(traceback.format_exc())
-			embed = EmbedTemplate.internal_error
+			embed = EmbedTemplate.internal_error()
 			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
 			await ctx.response.send_message(embed=embed)
 
-class LFG(commands.Cog):
-	def __init__(self, bot):
-		self.bot = bot
-
+class LFGCommands(commands.Cog):
 	# コマンドグループを定義する
 	lfg = SlashCommandGroup("lfg", "LFG Commands")
 
 	# 埋め込み
-
 	async def cancel_embed(ud) -> discord.Embed:
 		if ud.LFG.Status == False:
 			embed = discord.Embed(
@@ -149,6 +148,8 @@ class LFG(commands.Cog):
 
 	# コマンドたち
 	@lfg.command(description="新しくメンバーの募集を開始します。")
+	@discord.guild_only()
+	@discord.default_permissions(send_messages=True)
 	async def start(
 		self,
 		ctx: discord.ApplicationContext,
@@ -222,7 +223,7 @@ class LFG(commands.Cog):
 				# 募集メッセージを送信 (募集用テキストチャンネルが指定されていない場合は、コマンドが実行されたチャンネルへ送信する)
 				rch = Bot.Client.get_channel(int(gd["LFG_Channel"]))
 				if rch == None: rch = Bot.Client.get_channel(ctx.channel_id)
-				rmsg = await rch.send(content=f"{role}", embed=embed, view=LFGView(timeout=None))
+				rmsg = await rch.send(content=f"{role}", embed=embed, view=LFGView())
 
 				# 募集開始通知用埋め込みメッセージを作成
 				notification_embed = discord.Embed(
@@ -240,15 +241,17 @@ class LFG(commands.Cog):
 				await LFGWorker.start_lfg(ctx.guild.id, ctx.author.id, rmsg.id, game, nom, timeout)
 
 				# 募集開始通知を募集者へ送信する (返信)
-				await ctx.respond(embed=notification_embed, view=ToiregaKitanaiOmisetteIyadayoneView(timeout=None), ephemeral=True)
+				await ctx.respond(embed=notification_embed, view=ToiregaKitanaiOmisetteIyadayoneView(), ephemeral=True)
 		except Exception as e:
 			error("- エラー")
 			error(traceback.format_exc())
-			embed = EmbedTemplate.internal_error
+			embed = EmbedTemplate.internal_error()
 			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
 			await ctx.response.send_message(embed=embed, ephemeral=True)
 
 	@lfg.command(description="現在行っているメンバーの募集を終了します。")
+	@discord.guild_only()
+	@discord.default_permissions(send_messages=True)
 	async def end(self, ctx: discord.ApplicationContext):
 		try:
 			# ユーザーデータを取得する
@@ -262,11 +265,13 @@ class LFG(commands.Cog):
 		except Exception as e:
 			error("- エラー")
 			error(traceback.format_exc())
-			embed = EmbedTemplate.internal_error
+			embed = EmbedTemplate.internal_error()
 			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
 			await ctx.response.send_message(embed=embed, ephemeral=True)
 
 	@lfg.command(description="現在行っているメンバーの募集をキャンセルします。")
+	@discord.guild_only()
+	@discord.default_permissions(send_messages=True)
 	async def cancel(self, ctx: discord.ApplicationContext):
 		try:
 			# ユーザーデータを取得する
@@ -280,11 +285,99 @@ class LFG(commands.Cog):
 		except Exception as e:
 			error("- エラー")
 			error(traceback.format_exc())
-			embed = EmbedTemplate.internal_error
+			embed = EmbedTemplate.internal_error()
 			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
 			await ctx.response.send_message(embed=embed, ephemeral=True)
 
+
+def list_to_selectoptionlist(list: list) -> list[discord.SelectOption]:
+	options = []
+	for v in list: options.append(discord.SelectOption(label=str(v), value=str(v)))
+	return options
+
+class LFGUIView(discord.ui.View):
+	def __init__(self):
+		super().__init__(timeout=None) # タイムアウトを無効化
+		self.add_item(self.GameSelect(options=list_to_selectoptionlist(Data.game_title_list.keys())))
+		#self.add_item(self.ModeSelect(options=list_to_selectoptionlist(["指定なし"])))
+
+	def embed():
+		embed = discord.Embed(
+			title=":loudspeaker: メンバー募集",
+			description = "募集したいゲームとゲームモードを選択して、メンバー募集を開始できます。",
+			colour=discord.Colour.from_rgb(217, 47, 152)
+		)
+		return embed
+
+	# ゲーム選択リスト
+	class GameSelect(discord.ui.Select):
+		def __init__(self, options: list[discord.SelectOption] = ...) -> None:
+			super().__init__(placeholder="ゲームを選択", custom_id="LFGUI_Game_Select", options=options)
+
+		async def callback(self, interaction: Interaction):
+			view = discord.ui.View.from_message(interaction.message, timeout=None)
+			# 既存のモード選択リストを、選択されたゲームのモード一覧が選択肢になった選択リストに置き換える
+			#if len(view.children) >= 2: view.remove_item(view.children[1])
+			#view.add_item(LFGUIView.ModeSelect(options=list_to_selectoptionlist(Data.game_title_list[self.values[0]])))
+			#mode_select = view.get_item("LFGUI_Mode_Select")
+			#mode_select.custom_id = "LFGUI_Mode_Select"
+			#mode_select.options = list_to_selectoptionlist(Data.game_title_list[self.values[0]])
+			# ユーザーデータを取得
+			ud = Data.userdata[interaction.guild.id][interaction.user.id]
+			# ユーザーの選択中ゲームを選択されたゲームに変える
+			ud.LFGUI.Selected_Game = self.values[0]
+			await interaction.response.send(f"選択 (ゲーム): {str(self.values)}", ephemeral=True, delete_after=5)
+
+	# モード選択リスト
+	class ModeSelect(discord.ui.Select):
+		def __init__(self, options: list[discord.SelectOption] = ...) -> None:
+			super().__init__(placeholder="モードを選択", custom_id="LFGUI_Mode_Select", options=options)
+
+		async def callback(self, interaction: Interaction):
+			# ユーザーデータを取得
+			ud = Data.userdata[interaction.guild.id][interaction.user.id]
+			# ユーザーの選択中モードを選択されたモードに変える
+			ud.LFGUI.Selected_Mode = self.values[0]
+			await interaction.response.send_message(f"選択 (モード): {str(self.values)}", ephemeral=True, delete_after=5)
+
+
+class LFGUICommands(commands.Cog):
+	# コマンドグループを定義する
+	lfgui = SlashCommandGroup("lfgui", "LFG UI Commands")
+
+	# コマンドたち
+	@lfgui.command(description="メンバー募集UIを作成します。")
+	@discord.guild_only()
+	@discord.default_permissions(administrator=True)
+	async def create(
+		self,
+		ctx: discord.ApplicationContext,
+		channel: Option(
+			discord.TextChannel,
+			name="テキストチャンネル",
+			description="メンバー募集UIを作成するテキストチャンネル"
+		)
+	):
+		try:
+			uimsg = await channel.send(embed=LFGUIView.embed(), view=LFGUIView())
+			embed = discord.Embed(
+				title=":pager: メンバー募集UI",
+				description=f"メンバー募集UIを {channel.mention} へ作成しました。\n[メッセージを表示]({uimsg.jump_url})`",
+				color=discord.Colour.from_rgb(217, 47, 152)
+			)
+			await ctx.response.send_message(embed=embed, ephemeral=True)
+		except Exception as e:
+			error("- エラー")
+			error(traceback.format_exc())
+			embed = EmbedTemplate.internal_error()
+			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
+			await ctx.response.send_message(embed=embed, ephemeral=True)
+
+
 class ToiregaKitanaiOmisetteIyadayoneView(discord.ui.View):
+	def __init__(self):
+		super().__init__(timeout=None) # タイムアウトを無効化
+
 	@discord.ui.button(label="募集を終了", style=discord.ButtonStyle.red)
 	async def end_lfg(self, button, interaction: discord.Interaction):
 		# ボタンを削除する
@@ -292,7 +385,7 @@ class ToiregaKitanaiOmisetteIyadayoneView(discord.ui.View):
 		# ユーザーデータを取得する
 		ud = Data.userdata[interaction.guild.id][interaction.user.id]
 		# 埋め込みメッセージを作成
-		embed = await LFG.end_embed(ud)
+		embed = await LFGCommands.end_embed(ud)
 		# 募集終了通知を送信する
 		await interaction.response.send_message(embed=embed, ephemeral=True)
 		# 募集終了処理を実行する
@@ -305,38 +398,19 @@ class ToiregaKitanaiOmisetteIyadayoneView(discord.ui.View):
 		# ユーザーデータを取得する
 		ud = Data.userdata[interaction.guild.id][interaction.user.id]
 		# 埋め込みメッセージを作成
-		embed = await LFG.cancel_embed(ud)
+		embed = await LFGCommands.cancel_embed(ud)
 		# 募集終了通知を送信する
 		await interaction.response.send_message(embed=embed, ephemeral=True)
 		# 募集終了処理を実行する
 		await LFGWorker.end_lfg(2, interaction.guild.id, interaction.user.id)
 
+
 class LFGView(discord.ui.View):
+	def __init__(self):
+		super().__init__(timeout=None) # タイムアウトを無効化
+
 	@discord.ui.button(label="参加", emoji="✅", style=discord.ButtonStyle.green)
 	async def button_callback(self, button, interaction):
-		# 募集IDを取得
-		try:
-			lfgid = int(interaction.message.embeds[0].footer.text.lstrip("ID: "))
-		except Exception as e:
-			error("- エラー")
-			error(traceback.format_exc())
-			embed = EmbedTemplate.internal_error
-			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
-			await interaction.response.send_message(embed=embed, ephemeral=True)
-			return
-
-		try:
-			ud = Data.userdata[interaction.guild.id][int(lfgid)]
-			rmsg = interaction.message
-			if type(rmsg) != discord.Message:
-				return
-		except Exception as e:
-			error("- エラー")
-			error(traceback.format_exc())
-			embed = EmbedTemplate.internal_error
-			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
-			await interaction.response.send_message(embed=embed, ephemeral=True)
-
 		async def update_member_list():
 			try:
 				original_embed = rmsg.embeds[0]
@@ -348,13 +422,13 @@ class LFGView(discord.ui.View):
 					if field.name.startswith(":busts_in_silhouette: 参加者") is True:
 						field.name = f":busts_in_silhouette: 参加者 ({len(ud.LFG.Member)}/{ud.LFG.Max_Number_Of_Member + 1})"
 						field.value = Util.convert_to_user_bullet_points_from_id_list(ud.LFG.Member)
-				await rmsg.edit(rmsg.content, embed=original_embed, view=LFGView(timeout=None))
+				await rmsg.edit(rmsg.content, embed=original_embed, view=LFGView())
 			except Exception as e:
 				error("- エラー")
 				error(traceback.format_exc())
-				embed = EmbedTemplate.internal_error
+				embed = EmbedTemplate.internal_error()
 				embed.add_field(name="エラー内容", value=f"```{str(e)}```")
-				await interaction.response.send_message(embed=embed, ephemeral=True)
+				await interaction.message.reply(embed=embed)
 
 		async def send_join_message():
 			try:
@@ -366,18 +440,33 @@ class LFGView(discord.ui.View):
 			except Exception as e:
 				error("- エラー")
 				error(traceback.format_exc())
-				embed = EmbedTemplate.internal_error
+				embed = EmbedTemplate.internal_error()
 				embed.add_field(name="エラー内容", value=f"```{str(e)}```")
 				await interaction.response.send_message(embed=embed, ephemeral=True)
 
 		# 募集IDを取得
 		try:
 			lfgid = int(interaction.message.embeds[0].footer.text.lstrip("ID: "))
-		except:
-			self.clear_items()
+			author_id = lfgid
+		except Exception as e:
+			error("- エラー")
+			error(traceback.format_exc())
+			embed = EmbedTemplate.internal_error()
+			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
+			await interaction.message.reply(embed=embed, ephemeral=True)
 			return
-		# 募集者のIDを取得
-		author_id = lfgid
+
+		try:
+			ud = Data.userdata[interaction.guild.id][int(lfgid)]
+			rmsg = interaction.message
+			if type(rmsg) != discord.Message:
+				return
+		except Exception as e:
+			error("- エラー")
+			error(traceback.format_exc())
+			embed = EmbedTemplate.internal_error()
+			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
+			await interaction.message.reply(embed=embed, ephemeral=True)
 
 		try:
 			info(f"ボタン押下 - ユーザー: {interaction.user.name} ({interaction.user.id})")
@@ -416,10 +505,11 @@ class LFGView(discord.ui.View):
 		except Exception as e:
 			error("- エラー")
 			error(traceback.format_exc())
-			embed = EmbedTemplate.internal_error
+			embed = EmbedTemplate.internal_error()
 			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
 			await interaction.response.send_message(embed=embed, ephemeral=True)
 
 def setup(bot):
-	bot.add_cog(Config(bot))
-	bot.add_cog(LFG(bot))
+	bot.add_cog(ConfigCommands(bot))
+	bot.add_cog(LFGCommands(bot))
+	bot.add_cog(LFGUICommands(bot))

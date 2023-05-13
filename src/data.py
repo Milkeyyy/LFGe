@@ -7,8 +7,14 @@ from deta import Deta
 
 import bot as Bot
 
-game_title_list = ["Rainbow Six Siege", "Apex Legends", "Splatoon 3"]
-default_gamelist_item = {"Role_ID": "0"}
+game_title_list = {
+	"Rainbow Six Siege": ["ランク", "アンランク", "クイックマッチ", "デスマッチ", "カスタムマッチ", "訓練場"],
+	"Apex Legends": [],
+	"VALORANT": [],
+	"Battlefield 2042": [],
+	"Splatoon 3": []
+}
+default_gamelist_item = {"Role_ID": "0", "Modes": ["指定なし"]}
 
 default_userdata_item = {
 	"LFG": {
@@ -19,6 +25,10 @@ default_userdata_item = {
 		"Member": [],
 		"Max_Number_Of_Member": 0,
 		"Timeout": datetime.datetime.now()
+	},
+	"LFGUI": {
+		"Selected_Game": "",
+		"Selected_Mode": ""
 	}
 }
 
@@ -54,14 +64,21 @@ def check_guild_data():
 		gd = guilddata.get(str(guild.id))
 		algamelist = list(gd["Game_List"].keys())
 
+		update_list = {}
+
 		# ゲーム一覧にすべてのゲームが存在するかチェック、存在しないゲームがあれば追加する
 		info(f"-- ゲーム一覧を確認")
-		for game in game_title_list:
+		for game in game_title_list.keys():
 			info(f"--- 確認: {game}")
 			if game not in algamelist:
 				info(f"---- 作成: {game}")
-				guilddata.update({f"Game_List.{game}": default_gamelist_item})
-
+				update_list[f"Game_List.{game}"] = default_gamelist_item
+			# ゲーム一覧の項目に存在しない項目があった場合は追加する
+			for glk in default_gamelist_item.keys():
+				if gd["Game_List"][game].get(glk) == None:
+					update_list[f"Game_List.{game}.{glk}"] = default_gamelist_item[glk]
+			update_list[f"Game_List.{game}.Modes"] = game_title_list[game]
+		if len(update_list) >= 1: guilddata.update(update_list, str(guild.id))
 
 def create_game_list():
 	global game_title_list
@@ -72,8 +89,10 @@ def create_game_list():
 
 	gamelist = {}
 
-	for game in game_title_list:
+	for game in game_title_list.keys():
 		gamelist[game] = default_gamelist_item
+		if len(game_title_list[game]) >= 1:
+			gamelist[game]["Modes"] = game_title_list[game]
 
 	default_guilddata_item = {
 		"LFG_Channel": "0",

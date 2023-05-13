@@ -8,6 +8,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 import bot as Bot
+import commands.lfg as LFGModule
 import data as Data
 import lfg_worker as LFGWorker
 
@@ -39,6 +40,9 @@ async def on_ready():
 
 	# ギルドデータを確認&読み込み
 	Data.check_guild_data()
+
+	# 永続ビューの登録 (LFGUI)
+	Bot.Client.add_view(LFGModule.LFGUIView())
 
 	LFGWorker.updatelfgstatus.start()
 
