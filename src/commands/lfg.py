@@ -233,7 +233,7 @@ class LFGCommands(commands.Cog):
 				)
 				notification_embed.add_field(name=f"🎮 ゲーム", value=f"**{game}**")
 				notification_embed.add_field(name=f"🕒 締め切り", value=f"**<t:{timestamp}:f>\n(<t:{timestamp}:R>)**")
-				embed.add_field(name="\u200B", value="\u200B")
+				notification_embed.add_field(name="\u200B", value="\u200B")
 				notification_embed.add_field(name="*️⃣  人数", value=f"**{nom}**人")
 				notification_embed.set_footer(text=f"ID: {id}")
 
