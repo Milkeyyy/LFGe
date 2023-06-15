@@ -112,11 +112,5 @@ def create_user_data():
 	userdata = Box(ud)
 
 
-# 新しくサーバーに参加した時のイベント
-@Bot.Client.event
-async def on_guild_join(guild):
-	# ギルドデータを新規作成する
-	guilddata.put(default_guilddata_item, str(guild.id))
-
 # ゲーム一覧を作成
 create_game_list()
