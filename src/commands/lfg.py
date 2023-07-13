@@ -226,9 +226,10 @@ class LFGCommands(commands.Cog):
 				rmsg = await rch.send(content=f"{role}", embed=embed, view=LFGView())
 
 				# 募集開始通知用埋め込みメッセージを作成
+				ntfdelstp = int((datetime.datetime.now() + datetime.timedelta(minutes=1)).timestamp())
 				notification_embed = discord.Embed(
 					title=":arrow_forward: メンバーの募集を開始しました。",
-					description=f"[募集メッセージを表示]({rmsg.jump_url})",
+					description=f"[募集メッセージを表示]({rmsg.jump_url})\n(このメッセージは<t:{ntfdelstp}:R>に削除されます。)",
 					color=discord.Colour.from_rgb(79, 134, 194)
 				)
 				notification_embed.add_field(name=f"🎮 ゲーム", value=f"**{game}**")
@@ -237,11 +238,11 @@ class LFGCommands(commands.Cog):
 				notification_embed.add_field(name="*️⃣ 募集人数", value=f"**{nom}**人")
 				notification_embed.set_footer(text=f"ID: {id}")
 
+				# 募集開始通知を募集者へ送信する (返信)
+				await ctx.respond(embed=notification_embed, view=ToiregaKitanaiOmisetteIyadayoneView(), ephemeral=True, delete_after=60)
+
 				# 募集を開始する
 				await LFGWorker.start_lfg(ctx.guild.id, ctx.author.id, rmsg.id, game, nom, timeout)
-
-				# 募集開始通知を募集者へ送信する (返信)
-				await ctx.respond(embed=notification_embed, view=ToiregaKitanaiOmisetteIyadayoneView(), ephemeral=True)
 		except Exception as e:
 			error("- エラー")
 			error(traceback.format_exc())
@@ -325,7 +326,7 @@ class LFGView(discord.ui.View):
 	def __init__(self):
 		super().__init__(timeout=None) # タイムアウトを無効化
 
-	@discord.ui.button(label="参加", emoji="✅", style=discord.ButtonStyle.green)
+	@discord.ui.button(label="参加", style=discord.ButtonStyle.green)
 	async def button_callback(self, button, interaction):
 		async def update_member_list():
 			try:
