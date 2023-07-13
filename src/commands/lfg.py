@@ -110,7 +110,7 @@ class LFGCommands(commands.Cog):
 	lfg = SlashCommandGroup("lfg", "LFG Commands")
 
 	# 埋め込み
-	async def cancel_embed(self, ud) -> discord.Embed:
+	async def cancel_embed(ud) -> discord.Embed:
 		if ud.LFG.Status == False:
 			embed = discord.Embed(
 				title=":warning: メンバーの募集が実行されていません。",
@@ -128,7 +128,7 @@ class LFGCommands(commands.Cog):
 			embed.set_footer(text=f"ID: {ud.LFG.ID}")
 		return embed
 
-	async def end_embed(self, ud) -> discord.Embed:
+	async def end_embed(ud) -> discord.Embed:
 		if ud.LFG.Status == False:
 			embed = discord.Embed(
 				title=":warning: メンバーの募集が実行されていません。",
@@ -257,7 +257,7 @@ class LFGCommands(commands.Cog):
 			# ユーザーデータを取得する
 			ud = Data.userdata[ctx.guild.id][ctx.author.id]
 			# 埋め込みメッセージを作成
-			embed = await self.end_embed(ud)
+			embed = await LFGCommands.end_embed(ud)
 			# 募集終了処理を実行する
 			await LFGWorker.end_lfg(2, ctx.guild.id, ctx.author.id)
 			# 募集終了通知を送信する
@@ -277,7 +277,7 @@ class LFGCommands(commands.Cog):
 			# ユーザーデータを取得する
 			ud = Data.userdata[ctx.guild.id][ctx.author.id]
 			# 埋め込みメッセージを作成
-			embed = await self.cancel_embed(ud)
+			embed = await LFGCommands.cancel_embed(ud)
 			# 募集終了処理を実行する
 			await LFGWorker.end_lfg(2, ctx.guild.id, ctx.author.id)
 			# 募集終了通知を送信する
