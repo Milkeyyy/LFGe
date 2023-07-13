@@ -338,7 +338,7 @@ class LFGView(discord.ui.View):
 				for field in original_embed.fields:
 					if field.name.startswith(":busts_in_silhouette: 参加者") is True:
 						field.name = f":busts_in_silhouette: 参加者 ({len(ud.LFG.Member)}/{ud.LFG.Max_Number_Of_Member + 1})"
-						field.value = Util.convert_to_user_bullet_points_from_id_list(ud.LFG.Member)
+						field.value = Util.convert_to_user_bullet_points_from_id_list(ud.LFG.Member, ud.LFG.ID)
 				await rmsg.edit(rmsg.content, embed=original_embed, view=LFGView())
 			except Exception as e:
 				error("- エラー")

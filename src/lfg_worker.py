@@ -86,7 +86,7 @@ async def end_lfg(endtype, guild, author):
 
 	message_id = ud.LFG.Message_ID
 
-	# メッセージIDからメッセージを取得
+	# メッセージIDから募集メッセージを取得
 	msg = Bot.Client.get_message(message_id)
 	if msg == None:
 		logging.warning(f"募集メッセージを取得できません - ID: {message_id}")
