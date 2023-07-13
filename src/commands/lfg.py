@@ -80,7 +80,7 @@ class ConfigCommands(commands.Cog):
 
 		try:
 			if role.mentionable == False:
-				embed = EmbedTemplate.error
+				embed = EmbedTemplate.error()
 				embed.title = embed.title + "エラー"
 				embed.description = f"指定されたロール `{role.name}` は、メンションが許可されていません！"
 			else:
