@@ -8,7 +8,7 @@ from deta import Deta
 import bot as Bot
 
 game_title_list = {
-	"Rainbow Six Siege": ["ランク", "アンランク", "クイックマッチ", "デスマッチ", "カスタムマッチ", "訓練場"],
+	"Rainbow Six Siege": ["ランク", "アンランク", "クイックマッチ", "デスマッチ", "アーケード", "カスタムマッチ", "訓練場"],
 	"Apex Legends": [],
 	"VALORANT": [],
 	"Battlefield 2042": [],

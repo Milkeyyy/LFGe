@@ -124,7 +124,7 @@ class LFGCommands(commands.Cog):
 					color=discord.Colour.from_rgb(228, 146, 16)
 				)
 			embed.add_field(name=f"🎮 ゲーム", value=f"**{ud.LFG.Game}**")
-			embed.add_field(name="*️⃣ 人数", value=f"**`{ud.LFG.Max_Number_Of_Member}`**人")
+			embed.add_field(name="*️⃣ 募集人数", value=f"**`{ud.LFG.Max_Number_Of_Member}`**人")
 			embed.set_footer(text=f"ID: {ud.LFG.ID}")
 		return embed
 
@@ -142,7 +142,7 @@ class LFGCommands(commands.Cog):
 				color=discord.Colour.from_rgb(205, 61, 66)
 			)
 			embed.add_field(name=f"🎮 ゲーム", value=f"**{ud.LFG.Game}**")
-			embed.add_field(name="*️⃣  人数", value=f"**`{ud.LFG.Max_Number_Of_Member}`**人")
+			embed.add_field(name="*️⃣ 募集人数", value=f"**`{ud.LFG.Max_Number_Of_Member}`**人")
 			embed.set_footer(text=f"ID: {ud.LFG.ID}")
 		return embed
 
@@ -193,7 +193,7 @@ class LFGCommands(commands.Cog):
 				gd = Data.guilddata.get(str(ctx.guild.id))
 				# メンションするロールのIDを取得
 				rid = int(gd["Game_List"][game]["Role_ID"])
-				# メンションするロールをIDから取得 ロールが設定されていない場合は、メンションしない
+				# メンションするロールをIDから取得 ロールが設定されていない場合はメンションしない
 				if rid == 0 or None:
 					role = ""
 				else:
@@ -216,9 +216,9 @@ class LFGCommands(commands.Cog):
 				embed.add_field(name=f"🕒 締め切り", value=f"**<t:{timestamp}:f>\n(<t:{timestamp}:R>)**")
 				embed.add_field(name="\u200B", value="\u200B")
 				embed.add_field(name=f":busts_in_silhouette: 参加者 (1/{nom + 1})", value=f"・{ctx.author.mention}")
-				embed.add_field(name="*️⃣  人数", value=f"**{nom}**人")
+				embed.add_field(name="*️⃣ 募集人数", value=f"**{nom}**人")
 				embed.set_footer(text=f"ID: {id}")
-				embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.display_avatar.url)
+				embed.set_author(name=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
 
 				# 募集メッセージを送信 (募集用テキストチャンネルが指定されていない場合は、コマンドが実行されたチャンネルへ送信する)
 				rch = Bot.Client.get_channel(int(gd["LFG_Channel"]))
@@ -234,7 +234,7 @@ class LFGCommands(commands.Cog):
 				notification_embed.add_field(name=f"🎮 ゲーム", value=f"**{game}**")
 				notification_embed.add_field(name=f"🕒 締め切り", value=f"**<t:{timestamp}:f>\n(<t:{timestamp}:R>)**")
 				notification_embed.add_field(name="\u200B", value="\u200B")
-				notification_embed.add_field(name="*️⃣  人数", value=f"**{nom}**人")
+				notification_embed.add_field(name="*️⃣ 募集人数", value=f"**{nom}**人")
 				notification_embed.set_footer(text=f"ID: {id}")
 
 				# 募集を開始する
@@ -282,90 +282,6 @@ class LFGCommands(commands.Cog):
 			await LFGWorker.end_lfg(2, ctx.guild.id, ctx.author.id)
 			# 募集終了通知を送信する
 			await ctx.respond(embed=embed, ephemeral=True)
-		except Exception as e:
-			error("- エラー")
-			error(traceback.format_exc())
-			embed = EmbedTemplate.internal_error()
-			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
-			await ctx.response.send_message(embed=embed, ephemeral=True)
-
-
-def list_to_selectoptionlist(list: list) -> list[discord.SelectOption]:
-	options = []
-	for v in list: options.append(discord.SelectOption(label=str(v), value=str(v)))
-	return options
-
-class LFGUIView(discord.ui.View):
-	def __init__(self):
-		super().__init__(timeout=None) # タイムアウトを無効化
-		self.add_item(self.GameSelect(options=list_to_selectoptionlist(Data.game_title_list.keys())))
-		#self.add_item(self.ModeSelect(options=list_to_selectoptionlist(["指定なし"])))
-
-	def embed():
-		embed = discord.Embed(
-			title=":loudspeaker: メンバー募集",
-			description = "募集したいゲームとゲームモードを選択して、メンバー募集を開始できます。",
-			colour=discord.Colour.from_rgb(217, 47, 152)
-		)
-		return embed
-
-	# ゲーム選択リスト
-	class GameSelect(discord.ui.Select):
-		def __init__(self, options: list[discord.SelectOption] = ...) -> None:
-			super().__init__(placeholder="ゲームを選択", custom_id="LFGUI_Game_Select", options=options)
-
-		async def callback(self, interaction: Interaction):
-			view = discord.ui.View.from_message(interaction.message, timeout=None)
-			# 既存のモード選択リストを、選択されたゲームのモード一覧が選択肢になった選択リストに置き換える
-			#if len(view.children) >= 2: view.remove_item(view.children[1])
-			#view.add_item(LFGUIView.ModeSelect(options=list_to_selectoptionlist(Data.game_title_list[self.values[0]])))
-			#mode_select = view.get_item("LFGUI_Mode_Select")
-			#mode_select.custom_id = "LFGUI_Mode_Select"
-			#mode_select.options = list_to_selectoptionlist(Data.game_title_list[self.values[0]])
-			# ユーザーデータを取得
-			ud = Data.userdata[interaction.guild.id][interaction.user.id]
-			# ユーザーの選択中ゲームを選択されたゲームに変える
-			ud.LFGUI.Selected_Game = self.values[0]
-			await interaction.response.send(f"選択 (ゲーム): {str(self.values)}", ephemeral=True, delete_after=5)
-
-	# モード選択リスト
-	class ModeSelect(discord.ui.Select):
-		def __init__(self, options: list[discord.SelectOption] = ...) -> None:
-			super().__init__(placeholder="モードを選択", custom_id="LFGUI_Mode_Select", options=options)
-
-		async def callback(self, interaction: Interaction):
-			# ユーザーデータを取得
-			ud = Data.userdata[interaction.guild.id][interaction.user.id]
-			# ユーザーの選択中モードを選択されたモードに変える
-			ud.LFGUI.Selected_Mode = self.values[0]
-			await interaction.response.send_message(f"選択 (モード): {str(self.values)}", ephemeral=True, delete_after=5)
-
-
-class LFGUICommands(commands.Cog):
-	# コマンドグループを定義する
-	lfgui = SlashCommandGroup("lfgui", "LFG UI Commands")
-
-	# コマンドたち
-	@lfgui.command(description="メンバー募集UIを作成します。")
-	@discord.guild_only()
-	@discord.default_permissions(administrator=True)
-	async def create(
-		self,
-		ctx: discord.ApplicationContext,
-		channel: Option(
-			discord.TextChannel,
-			name="テキストチャンネル",
-			description="メンバー募集UIを作成するテキストチャンネル"
-		)
-	):
-		try:
-			uimsg = await channel.send(embed=LFGUIView.embed(), view=LFGUIView())
-			embed = discord.Embed(
-				title=":pager: メンバー募集UI",
-				description=f"メンバー募集UIを {channel.mention} へ作成しました。\n[メッセージを表示]({uimsg.jump_url})`",
-				color=discord.Colour.from_rgb(217, 47, 152)
-			)
-			await ctx.response.send_message(embed=embed, ephemeral=True)
 		except Exception as e:
 			error("- エラー")
 			error(traceback.format_exc())
@@ -434,7 +350,7 @@ class LFGView(discord.ui.View):
 			try:
 				# 埋め込みメッセージを作成して返信
 				embed = discord.Embed(color=discord.Colour.from_rgb(131, 177, 88))
-				embed.set_author(name=f"{interaction.user} さんが参加しました", icon_url=interaction.user.display_avatar.url)
+				embed.set_author(name=f"{interaction.user.display_name} さんが参加しました", icon_url=interaction.user.display_avatar.url)
 				embed.set_footer(text=f"ID: {lfgid}")
 				await interaction.response.send_message(embed=embed)
 			except Exception as e:
@@ -512,4 +428,3 @@ class LFGView(discord.ui.View):
 def setup(bot):
 	bot.add_cog(ConfigCommands(bot))
 	bot.add_cog(LFGCommands(bot))
-	bot.add_cog(LFGUICommands(bot))

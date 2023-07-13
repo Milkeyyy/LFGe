@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 import bot as Bot
 import commands.lfg as LFGModule
+import commands.lfgui as LFGUIModule
 import data as Data
 import lfg_worker as LFGWorker
 
@@ -42,7 +43,7 @@ async def on_ready():
 	Data.check_guild_data()
 
 	# 永続ビューの登録 (LFGUI)
-	Bot.Client.add_view(LFGModule.LFGUIView())
+	Bot.Client.add_view(LFGUIModule.MainView())
 
 	LFGWorker.updatelfgstatus.start()
 
@@ -58,8 +59,11 @@ try:
 	info("データベースを取得")
 	Data.deta = Data.Deta(environ["DETA_PROJECT_KEY"])
 
+	# コマンドたちの読み込み
 	Bot.Client.load_extension("commands.about")
 	Bot.Client.load_extension("commands.lfg")
+	Bot.Client.load_extension("commands.lfgui")
+
 	Bot.Client.run(environ["BOT_TOKEN"])
 except Exception as e:
 	logging.error(traceback.format_exc())
