@@ -259,7 +259,7 @@ class LFGCommands(commands.Cog):
 			# 埋め込みメッセージを作成
 			embed = await LFGCommands.end_embed(ud)
 			# 募集終了処理を実行する
-			await LFGWorker.end_lfg(2, ctx.guild.id, ctx.author.id)
+			await LFGWorker.end_lfg(1, ctx.guild.id, ctx.author.id)
 			# 募集終了通知を送信する
 			await ctx.respond(embed=embed, ephemeral=True)
 		except Exception as e:
