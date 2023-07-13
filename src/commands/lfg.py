@@ -215,7 +215,7 @@ class LFGCommands(commands.Cog):
 				embed.add_field(name=f"🎮 ゲーム", value=f"**{game}**")
 				embed.add_field(name=f"🕒 締め切り", value=f"**<t:{timestamp}:f>\n(<t:{timestamp}:R>)**")
 				embed.add_field(name="\u200B", value="\u200B")
-				embed.add_field(name=f":busts_in_silhouette: 参加者 (1/{nom + 1})", value=f"・{ctx.author.mention}")
+				embed.add_field(name=f":busts_in_silhouette: 参加者 (1/{nom + 1})", value=f"・{ctx.author.mention} **`募集者`**")
 				embed.add_field(name="*️⃣ 募集人数", value=f"**{nom}**人")
 				embed.set_footer(text=f"ID: {id}")
 				embed.set_author(name=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
