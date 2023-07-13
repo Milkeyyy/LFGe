@@ -110,7 +110,7 @@ class LFGCommands(commands.Cog):
 	lfg = SlashCommandGroup("lfg", "LFG Commands")
 
 	# 埋め込み
-	async def cancel_embed(ud) -> discord.Embed:
+	async def cancel_embed(self, ud) -> discord.Embed:
 		if ud.LFG.Status == False:
 			embed = discord.Embed(
 				title=":warning: メンバーの募集が実行されていません。",
@@ -128,7 +128,7 @@ class LFGCommands(commands.Cog):
 			embed.set_footer(text=f"ID: {ud.LFG.ID}")
 		return embed
 
-	async def end_embed(ud) -> discord.Embed:
+	async def end_embed(self, ud) -> discord.Embed:
 		if ud.LFG.Status == False:
 			embed = discord.Embed(
 				title=":warning: メンバーの募集が実行されていません。",

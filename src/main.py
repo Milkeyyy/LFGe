@@ -47,6 +47,14 @@ async def on_ready():
 
 	LFGWorker.updatelfgstatus.start()
 
+# 新しくサーバーに参加した時のイベント
+@Bot.Client.event
+async def on_guild_join(guild: discord.Guild):
+	# ギルドデータを新規作成する
+	info(f"-- ギルドデータを作成: {guild.name} ({guild.id})")
+	Data.guilddata.put(Data.default_guilddata_item, str(guild.id))
+	Data.create_user_data()
+
 
 # Botへログイン
 try:
