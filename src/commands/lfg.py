@@ -327,33 +327,14 @@ class LFGView(discord.ui.View):
 		super().__init__(timeout=None) # タイムアウトを無効化
 
 	@discord.ui.button(label="参加", style=discord.ButtonStyle.green)
-	async def button_callback(self, button, interaction):
-		async def update_member_list():
-			try:
-				original_embed = rmsg.embeds[0]
-			except:
-				return
-
-			try:
-				for field in original_embed.fields:
-					if field.name.startswith(":busts_in_silhouette: 参加者") is True:
-						field.name = f":busts_in_silhouette: 参加者 ({len(ud.LFG.Member)}/{ud.LFG.Max_Number_Of_Member + 1})"
-						field.value = Util.convert_to_user_bullet_points_from_id_list(ud.LFG.Member, ud.LFG.ID)
-				await rmsg.edit(rmsg.content, embed=original_embed, view=LFGView())
-			except Exception as e:
-				error("- エラー")
-				error(traceback.format_exc())
-				embed = EmbedTemplate.internal_error()
-				embed.add_field(name="エラー内容", value=f"```{str(e)}```")
-				await interaction.message.reply(embed=embed)
-
+	async def join_button_callback(self, button, interaction):
 		async def send_join_message():
 			try:
 				# 埋め込みメッセージを作成して返信
 				embed = discord.Embed(color=discord.Colour.from_rgb(131, 177, 88))
 				embed.set_author(name=f"{interaction.user.display_name} さんが参加しました", icon_url=interaction.user.display_avatar.url)
 				embed.set_footer(text=f"ID: {lfgid}")
-				await interaction.response.send_message(embed=embed)
+				await interaction.response.send_message(embed=embed, delete_after=5)
 			except Exception as e:
 				error("- エラー")
 				error(traceback.format_exc())
@@ -373,6 +354,7 @@ class LFGView(discord.ui.View):
 			await interaction.message.reply(embed=embed, ephemeral=True)
 			return
 
+		# 募集メッセージを取得
 		try:
 			ud = Data.userdata[interaction.guild.id][int(lfgid)]
 			rmsg = interaction.message
@@ -386,7 +368,7 @@ class LFGView(discord.ui.View):
 			await interaction.message.reply(embed=embed, ephemeral=True)
 
 		try:
-			info(f"ボタン押下 - ユーザー: {interaction.user.name} ({interaction.user.id})")
+			info(f"参加ボタン押下 - ID: {author_id} | ユーザー: {interaction.user.name} ({interaction.user.id})")
 			info("- メンバー: " + str(ud.LFG.Member))
 
 			# ボタンを押したのが募集者本人の場合
@@ -394,7 +376,7 @@ class LFGView(discord.ui.View):
 				embed = discord.Embed(
 					color=discord.Colour.from_rgb(205, 61, 66),
 					description=":no_entry_sign: 自分で自分の募集に参加することはできません...:cry:")
-				msg = await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=5)
+				await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=5)
 			# それ以外の場合
 			else:
 				# 既に募集に参加している場合
@@ -402,14 +384,15 @@ class LFGView(discord.ui.View):
 					embed = discord.Embed(
 						color=discord.Colour.from_rgb(205, 61, 66),
 						description=":no_entry_sign: あなたは既にこの募集に参加しています！")
-					msg = await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=5)
+					await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=5)
 				# 募集に参加していない場合
 				else:
 					# 最大人数に達する場合
 					if len(ud.LFG.Member) >= ud.LFG.Max_Number_Of_Member:
 						# 募集データにユーザーIDを追加
 						ud.LFG.Member.append(interaction.user.id)
-						await update_member_list()
+						# 埋め込みメッセージを更新する
+						await LFGWorker.update_member_list(rmsg, ud)
 						await send_join_message()
 						# 募集を締め切る
 						await LFGWorker.end_lfg(1, rmsg.guild.id, lfgid)
@@ -417,8 +400,82 @@ class LFGView(discord.ui.View):
 					else:
 						# 募集データにユーザーIDを追加
 						ud.LFG.Member.append(interaction.user.id)
-						await update_member_list()
+						# 埋め込みメッセージを更新する
+						await LFGWorker.update_member_list(rmsg, ud)
 						await send_join_message()
+		except Exception as e:
+			error("- エラー")
+			error(traceback.format_exc())
+			embed = EmbedTemplate.internal_error()
+			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
+			await interaction.response.send_message(embed=embed, ephemeral=True)
+
+	@discord.ui.button(label="離脱", style=discord.ButtonStyle.red)
+	async def leave_button_callback(self, button, interaction):
+		async def send_leave_message():
+			try:
+				# 埋め込みメッセージを作成して返信
+				embed = discord.Embed(color=discord.Colour.from_rgb(131, 177, 88))
+				embed.set_author(name=f"{interaction.user.display_name} さんが離脱しました", icon_url=interaction.user.display_avatar.url)
+				embed.set_footer(text=f"ID: {lfgid}")
+				await interaction.response.send_message(embed=embed, delete_after=5)
+			except Exception as e:
+				error("- エラー")
+				error(traceback.format_exc())
+				embed = EmbedTemplate.internal_error()
+				embed.add_field(name="エラー内容", value=f"```{str(e)}```")
+				await interaction.response.send_message(embed=embed, ephemeral=True)
+
+		# 募集IDを取得
+		try:
+			lfgid = int(interaction.message.embeds[0].footer.text.lstrip("ID: "))
+			author_id = lfgid
+		except Exception as e:
+			error("- エラー")
+			error(traceback.format_exc())
+			embed = EmbedTemplate.internal_error()
+			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
+			await interaction.message.reply(embed=embed, ephemeral=True)
+			return
+
+		# 募集メッセージを取得
+		try:
+			ud = Data.userdata[interaction.guild.id][int(lfgid)]
+			rmsg = interaction.message
+			if type(rmsg) != discord.Message:
+				return
+		except Exception as e:
+			error("- エラー")
+			error(traceback.format_exc())
+			embed = EmbedTemplate.internal_error()
+			embed.add_field(name="エラー内容", value=f"```{str(e)}```")
+			await interaction.message.reply(embed=embed, ephemeral=True)
+
+		try:
+			info(f"離脱ボタン押下 - ID: {author_id} | ユーザー: {interaction.user.name} ({interaction.user.id})")
+			info("- メンバー: " + str(ud.LFG.Member))
+
+			# ボタンを押したのが募集者本人の場合
+			if author_id == interaction.user.id:
+				embed = discord.Embed(
+					color=discord.Colour.from_rgb(205, 61, 66),
+					description=":no_entry_sign: 自分の募集から離脱することはできません...:cry:")
+				await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=5)
+			# それ以外の場合
+			else:
+				# 既に募集に参加している場合
+				if interaction.user.id in ud.LFG.Member:
+					# 募集データからボタンを押したユーザーのIDを削除する
+					ud.LFG.Member.remove(interaction.user.id)
+					# 埋め込みメッセージを更新する
+					await LFGWorker.update_member_list(rmsg, ud)
+					await send_leave_message()
+				# 募集に参加していない場合
+				else:
+					embed = discord.Embed(
+						color=discord.Colour.from_rgb(205, 61, 66),
+						description=":no_entry_sign: あなたはこの募集に参加していません！")
+					await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=5)
 		except Exception as e:
 			error("- エラー")
 			error(traceback.format_exc())

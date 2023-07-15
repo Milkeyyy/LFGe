@@ -1,6 +1,7 @@
 import datetime
 import logging
 import traceback
+from logging import error, info, warning
 
 import discord
 from box import Box
@@ -8,6 +9,8 @@ from discord.ext import tasks
 
 import bot as Bot
 import data as Data
+import embed as EmbedTemplate
+import util as Util
 
 # 1分毎に募集状況を更新する
 lfg_loop_isrunning = False
@@ -115,3 +118,22 @@ async def end_lfg(endtype, guild, author):
 	ud.LFG = Data.default_userdata_item["LFG"]
 	# ユーザーデータの募集状態を無効に変える
 	ud.LFG.Status = False
+
+async def update_member_list(rmsg, ud):
+	try:
+		original_embed = rmsg.embeds[0]
+	except:
+		return
+
+	try:
+		for field in original_embed.fields:
+			if field.name.startswith(":busts_in_silhouette: 参加者") is True:
+				field.name = f":busts_in_silhouette: 参加者 ({len(ud.LFG.Member)}/{ud.LFG.Max_Number_Of_Member + 1})"
+				field.value = Util.convert_to_user_bullet_points_from_id_list(ud.LFG.Member, ud.LFG.ID)
+		await rmsg.edit(embed=original_embed)
+	except Exception as e:
+		error("- エラー")
+		error(traceback.format_exc())
+		embed = EmbedTemplate.internal_error()
+		embed.add_field(name="エラー内容", value=f"```{str(e)}```")
+		await rmsg.reply(embed=embed)
